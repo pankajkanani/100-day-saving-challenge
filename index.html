@@ -5,53 +5,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>100-Day Fixed Saving Challenge</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
       text-align: center;
       padding: 20px;
+      margin: 0;
     }
     h2 {
-      color: #333;
+      color: #2c3e50;
+      font-size: 28px;
+      margin-bottom: 10px;
     }
     .info {
       font-size: 18px;
-      margin: 10px 0;
+      margin: 10px 0 20px;
+      color: #555;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 10px;
-      max-width: 600px;
-      margin: 20px auto;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 12px;
+      max-width: 680px;
+      margin: 0 auto;
     }
     .cell {
-      background: #fff;
+      background: linear-gradient(145deg, #f0f0f0, #ffffff);
       border: 2px solid #ccc;
-      border-radius: 8px;
-      padding: 15px 0;
+      border-radius: 10px;
+      padding: 16px 0;
       font-weight: bold;
+      font-size: 16px;
       cursor: pointer;
-      transition: background 0.3s;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      color: #333;
+    }
+    .cell:hover {
+      background: #ecf9f1;
+      transform: scale(1.03);
+      border-color: #27ae60;
     }
     .cell.completed {
-      background: #a0e7a0;
-      border-color: #4CAF50;
-      color: #000;
+      background: linear-gradient(to top left, #a0e7a0, #d0fcd0);
+      color: #1e4620;
+      border-color: #2ecc71;
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+      transform: scale(1.05);
     }
     .total-box {
-      margin-top: 20px;
+      margin-top: 30px;
       font-size: 20px;
+      color: #444;
     }
     .reset-btn {
-      margin-top: 20px;
-      padding: 10px 20px;
+      margin-top: 25px;
+      padding: 12px 24px;
       font-size: 16px;
       border: none;
-      background: #f44336;
+      background: #e74c3c;
       color: white;
       border-radius: 8px;
       cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .reset-btn:hover {
+      background: #c0392b;
     }
   </style>
 </head>
@@ -59,7 +81,7 @@
 
   <h2>💸 100-Day Fixed Saving Challenge 💸</h2>
 
-  <div class="info">Click on each day to mark it as saved.</div>
+  <div class="info">Click on each day to mark it as saved. Keep going and hit ₹1,00,000!</div>
 
   <div class="grid" id="grid"></div>
 
@@ -68,7 +90,7 @@
     Remaining: ₹<span id="remaining">100000</span>
   </div>
 
-  <button class="reset-btn" onclick="resetProgress()">🔁 Reset</button>
+  <button class="reset-btn" onclick="resetProgress()">🔁 Reset Progress</button>
 
   <script>
     const gridValues = [
@@ -93,6 +115,7 @@
     function renderGrid() {
       grid.innerHTML = '';
       let total = 0;
+
       gridValues.forEach((val, idx) => {
         const cell = document.createElement('div');
         cell.className = 'cell';
@@ -101,21 +124,22 @@
           cell.classList.add('completed');
           total += val;
         }
-        cell.addEventListener('click', () => toggleSave(idx, val, cell));
+
+        cell.addEventListener('click', () => {
+          if (savedMap[idx]) {
+            delete savedMap[idx];
+          } else {
+            savedMap[idx] = true;
+          }
+          localStorage.setItem('savedMap', JSON.stringify(savedMap));
+          renderGrid();
+        });
+
         grid.appendChild(cell);
       });
-      totalSavedEl.innerText = total;
-      remainingEl.innerText = totalTarget - total;
-    }
 
-    function toggleSave(index, amount, element) {
-      if (savedMap[index]) {
-        delete savedMap[index];
-      } else {
-        savedMap[index] = true;
-      }
-      localStorage.setItem('savedMap', JSON.stringify(savedMap));
-      renderGrid();
+      animateValue(totalSavedEl, +totalSavedEl.innerText, total, 600);
+      animateValue(remainingEl, +remainingEl.innerText, totalTarget - total, 600);
     }
 
     function resetProgress() {
@@ -124,6 +148,18 @@
         localStorage.removeItem('savedMap');
         renderGrid();
       }
+    }
+
+    function animateValue(obj, start, end, duration) {
+      const range = end - start;
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const progress = Math.min((currentTime - startTime) / duration, 1);
+        obj.innerText = Math.floor(start + range * progress);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
     }
 
     renderGrid();
